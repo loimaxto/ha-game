@@ -1,0 +1,40 @@
+Tạo một trò chơi Python 3 sử dụng Pygame (phiên bản 2.0 trở lên) có tên "Balancing Catcher Game" với các yêu cầu sau:
+
+1. Cài đặt màn hình
+    - Độ phân giải cửa sổ: 1600x600
+    - Màu nền: xanh da trời nhạt (RGB: 200, 230, 255)
+
+2. Người bắt (Catcher)
+    - Được đại diện bởi một hình ảnh có viền đỏ rõ ràng.
+    - Đặt gần đáy màn hình và luôn hiển thị.
+    - Có thể di chuyển sang trái/phải bằng các phím mũi tên.
+    - Nghiêng sang trái hoặc phải tùy theo sự mất cân bằng trọng lượng của các vật thể đã hạ xuống (góc nghiêng tối đa: ±30 độ).
+    - Bao gồm một khu vực bệ rõ ràng để phát hiện vật thể hạ xuống.
+    - Độ nghiên tương ứng với trọng lượng của các vật thể đã hạ xuống.
+
+3. Vật thể rơi
+    - Sử dụng hình ảnh ngẫu nhiên (ví dụ: item1.png, item2.png, v.v.) từ thư mục ./assets/
+    - Xuất hiện theo khoảng thời gian đều đặn (ví dụ: mỗi 1.5 giây).
+    - Mỗi vật thể có trọng lượng làm catcher nghiên về phía có trọng lượng nặng hơn.
+    - Khi va chạm với catcher, vật thể phải hạ xuống chính xác sao cho cạnh dưới của vật thể trùng với mặt trên của bệ catcher.
+    - Các vật thể đã hạ xuống sẽ tồn tại trên bệ và nghiên theo độ nghiêng, viền của bệ catcher.
+    - Các vật thể rơi có thể lên xếp chồng nhau, không nảy khi chạm nhau hoặc chạm catcher
+    - Các vật thể rơi giữ nguyên vị trí trên catcher
+
+6. Hành vi kết thúc trò chơi
+    - Nếu bất kỳ vật thể nào đã hạ xuống trượt khỏi bệ:
+    - Hiển thị thông báo "Game Over!" lớn màu đỏ ở giữa màn hình.
+    - Tạm dừng 3 giây trước khi kết thúc trò chơi.
+    - Ấn R để chơi lại
+
+7. Yêu cầu
+    - Catcher phải có viền đỏ.
+    - Vật thể rơi phải có viền xanh lá cây để dễ nhìn thấy.
+    - Lưu hình ảnh trong thư mục ./assets/
+    - giới hạn nghiên 30 độ, nếu chạm giới hạn này thì sẽ thua
+    - tạo 1 đường thẳng thể hiện giới hạn nghiên
+    - tuân thủ nghiêm ngặc qui tắc vật lý
+
+8. Phụ thuộc
+    - Chỉ sử dụng Python 3 và Pygame ≥ 2.0
+    - Không sử dụng thư viện ngoài nào ngoài Pygame.
