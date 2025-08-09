@@ -4,35 +4,35 @@ import sys
 import asyncio
 import platform
 
-# Khởi tạo Pygame
+# Initialize Pygame
 pygame.init()
 
-# Hằng số
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 800
+# Constants
+SCREEN_WIDTH = 480
+SCREEN_HEIGHT = 640
 BACKGROUND_COLOR = (150, 150, 150)
 BLACK = (0, 0, 0)
 GREEN = (0, 255, 0)
 FPS = 60
 
-# Kích thước vật cản được định nghĩa trong mã nguồn
+# Obstacle sizes
 OBSTACLE_SIZES = [(60, 100), (60, 100)]
 
-# Thiết lập màn hình
+# Set up the display
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
-pygame.display.set_caption("Trò chơi tránh chướng ngại vật")
+pygame.display.set_caption("Obstacle Avoidance Game")
 
-# Tải font
+# Load fonts
 font_large = pygame.font.Font(None, 74)
 font_small = pygame.font.Font(None, 36)
 
-# Tải hình ảnh
+# Load images
 def load_images(path, sizes):
     try:
         images = [pygame.image.load(f'{path}{i+1}.png').convert_alpha() for i in range(len(sizes))]
         return [pygame.transform.scale(img, sizes[i]) for i, img in enumerate(images)]
     except pygame.error:
-        print(f"Không thể tải hình ảnh từ {path}. Sử dụng hình chữ nhật thay thế.")
+        print(f"Cannot load images from {path}. Using rectangles instead.")
         surfaces = []
         for size in sizes:
             surface = pygame.Surface(size, pygame.SRCALPHA)
@@ -44,23 +44,24 @@ def load_images(path, sizes):
 vehicles = pygame.image.load('./assets/catcher.png').convert_alpha()
 vehicles = pygame.transform.scale(vehicles, (50, 80))
 obstacles_types = load_images('./assets/obstacles/item', OBSTACLE_SIZES)
-background = pygame.image.load('./assets/background.png').convert()
-background = pygame.transform.scale(background, (SCREEN_WIDTH))
+original_background = pygame.image.load('./assets/background.png').convert()
 
-# Biến trò chơi
+# Game variables
 vehicle_image = None
 vehicle_rect = None
 obstacles = []
 background_y = 0
-speed = 5
+speed = 5  # Background speed
+obstacle_speed = 7  # Obstacle speed, different from background
 last_spawn_time = 0
 last_speed_increase = 0
 score = 0
 game_over = False
 game_over_time = 0
+scaled_background = None
 clock = pygame.time.Clock()
 
-# Màn hình bắt đầu
+# Start screen
 def start_screen():
     screen.fill(BACKGROUND_COLOR)
     text = font_large.render("Press Enter to start", True, BLACK)
@@ -77,9 +78,9 @@ def start_screen():
                 if event.key == pygame.K_RETURN:
                     waiting = False
 
-# Thiết lập trò chơi
+# Game setup
 def setup():
-    global vehicle_rect, obstacles, background_y, speed, score, game_over, last_spawn_time, last_speed_increase, vehicle_image
+    global vehicle_rect, obstacles, background_y, speed, obstacle_speed, score, game_over, last_spawn_time, last_speed_increase, vehicle_image, scaled_background
     vehicle_image = vehicles
     vehicle_rect = vehicle_image.get_rect()
     vehicle_rect.bottom = SCREEN_HEIGHT - 10
@@ -87,13 +88,18 @@ def setup():
     obstacles = []
     background_y = 0
     speed = 5
+    obstacle_speed = 7
     score = 0
     game_over = False
     last_spawn_time = pygame.time.get_ticks()
     last_speed_increase = pygame.time.get_ticks()
+    # Scale background to match SCREEN_WIDTH, maintaining aspect ratio
+    scale_factor = SCREEN_WIDTH / original_background.get_width()
+    new_height = int(original_background.get_height() * scale_factor)
+    scaled_background = pygame.transform.scale(original_background, (SCREEN_WIDTH, new_height))
 
 async def main():
-    global game_over, score, speed, background_y, last_spawn_time, last_speed_increase, game_over_time, SCREEN_WIDTH, SCREEN_HEIGHT, screen
+    global game_over, score, speed, obstacle_speed, background_y, last_spawn_time, last_speed_increase, game_over_time, SCREEN_WIDTH, SCREEN_HEIGHT, screen
     start_screen()
     setup()
     while True:
@@ -102,7 +108,6 @@ async def main():
             if event.type == pygame.QUIT:
                 return
             if event.type == pygame.VIDEORESIZE:
-                global SCREEN_WIDTH, SCREEN_HEIGHT, screen
                 SCREEN_WIDTH, SCREEN_HEIGHT = event.size
                 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
                 setup()
@@ -110,6 +115,7 @@ async def main():
                 if game_over and current_time - game_over_time > 3000 and event.key == pygame.K_r:
                     setup()
 
+        bg_height = scaled_background.get_height()
         if not game_over:
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT] and vehicle_rect.left > 0:
@@ -117,11 +123,9 @@ async def main():
             if keys[pygame.K_RIGHT] and vehicle_rect.right < SCREEN_WIDTH:
                 vehicle_rect.x += 5
 
-            background_y += speed
-            if background_y >= SCREEN_HEIGHT:
-                background_y = 0
+            background_y = (background_y + speed) % bg_height
 
-            # Sinh vật cản ngẫu nhiên
+            # Spawn obstacles
             if current_time - last_spawn_time > 1500:
                 selected_image = random.choice(obstacles_types)
                 obstacle_width = selected_image.get_width()
@@ -133,27 +137,28 @@ async def main():
                 obstacles.append({'rect': obstacle_rect, 'image': selected_image})
                 last_spawn_time = current_time
 
-            # Di chuyển vật cản
+            # Move obstacles
             for obj in obstacles[:]:
-                obj['rect'].y += speed
+                obj['rect'].y += obstacle_speed
                 if obj['rect'].top > SCREEN_HEIGHT:
                     obstacles.remove(obj)
                     score += 1
 
-            # Tăng tốc độ
+            # Increase speed
             if current_time - last_speed_increase > 10000:
                 speed += 1
+                obstacle_speed += 1
                 last_speed_increase = current_time
 
-            # Kiểm tra va chạm
+            # Check collision
             for obj in obstacles:
                 if vehicle_rect.colliderect(obj['rect']):
                     game_over = True
                     game_over_time = current_time
 
-        # Vẽ
-        screen.blit(background, (0, background_y - SCREEN_HEIGHT))
-        screen.blit(background, (0, background_y))
+        # Draw
+        screen.blit(scaled_background, (0, background_y - bg_height))
+        screen.blit(scaled_background, (0, background_y))
         if not game_over:
             screen.blit(vehicle_image, vehicle_rect)
         for obj in obstacles:

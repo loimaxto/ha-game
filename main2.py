@@ -51,7 +51,8 @@ vehicle_image = None
 vehicle_rect = None
 obstacles = []
 background_y = 0
-speed = 5
+speed = 5  # Background speed
+obstacle_speed = 7  # Obstacle speed, different from background
 last_spawn_time = 0
 last_speed_increase = 0
 score = 0
@@ -79,7 +80,7 @@ def start_screen():
 
 # Game setup
 def setup():
-    global vehicle_rect, obstacles, background_y, speed, score, game_over, last_spawn_time, last_speed_increase, vehicle_image, scaled_background
+    global vehicle_rect, obstacles, background_y, speed, obstacle_speed, score, game_over, last_spawn_time, last_speed_increase, vehicle_image, scaled_background
     vehicle_image = vehicles
     vehicle_rect = vehicle_image.get_rect()
     vehicle_rect.bottom = SCREEN_HEIGHT - 10
@@ -87,6 +88,7 @@ def setup():
     obstacles = []
     background_y = 0
     speed = 5
+    obstacle_speed = 7
     score = 0
     game_over = False
     last_spawn_time = pygame.time.get_ticks()
@@ -97,7 +99,7 @@ def setup():
     scaled_background = pygame.transform.scale(original_background, (SCREEN_WIDTH, new_height))
 
 async def main():
-    global game_over, score, speed, background_y, last_spawn_time, last_speed_increase, game_over_time, SCREEN_WIDTH, SCREEN_HEIGHT, screen
+    global game_over, score, speed, obstacle_speed, background_y, last_spawn_time, last_speed_increase, game_over_time, SCREEN_WIDTH, SCREEN_HEIGHT, screen
     start_screen()
     setup()
     while True:
@@ -137,7 +139,7 @@ async def main():
 
             # Move obstacles
             for obj in obstacles[:]:
-                obj['rect'].y += speed
+                obj['rect'].y += obstacle_speed
                 if obj['rect'].top > SCREEN_HEIGHT:
                     obstacles.remove(obj)
                     score += 1
@@ -145,6 +147,7 @@ async def main():
             # Increase speed
             if current_time - last_speed_increase > 10000:
                 speed += 1
+                obstacle_speed += 1
                 last_speed_increase = current_time
 
             # Check collision
